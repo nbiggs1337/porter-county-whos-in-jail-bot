@@ -1,4 +1,4 @@
-# Porter County Scraper
+# Porter County Whos In Jail Bot
 
 This project scrapes recent inmate bookings from the Porter County Sheriff public feed and posts the information to Facebook (and optionally Twitter and email). It is designed to run as a scheduled cron job.
 
