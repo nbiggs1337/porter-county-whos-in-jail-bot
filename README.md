@@ -41,7 +41,11 @@ This project scrapes recent inmate bookings from the Porter County Sheriff publi
 ## Usage
 - To run once manually:
   ```sh
-  node fetchAndParse.cron.js
+  node fetchAndParse.cron.js 
+  ```
+  or
+    ```sh
+  npm start
   ```
 - To run automatically every 6 hours (default):
   The cron job is set up in the script using `node-cron`.
