@@ -8,7 +8,8 @@ const PAGE_ID = process.env.PAGE_ID;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 const GRAPH_API_URL = `https://graph.facebook.com/v23.0/${PAGE_ID}`;
 
-
+console.log(PAGE_ID)
+console.log(ACCESS_TOKEN)
 
 // Test Twitter client connection
 
@@ -38,10 +39,11 @@ async function fetchNewBookings() {
   // });
 
   const nowSec = Math.floor(Date.now() / 1000);
-  console.log(nowSec)
+  console.log(nowSec, Date(nowSec))
   
   const oneDayAgoSec = nowSec - 48 * 60 * 60;
   // Filter using inmate.date.sec (Unix timestamp)
+  console.log(data.length, "currently sitting in PCJ")
   const newBookings = data.filter(inmate => {
     // console.log(inmate.date.sec,  oneDayAgoSec)
     return inmate.date.sec > oneDayAgoSec;
@@ -53,13 +55,44 @@ async function fetchNewBookings() {
 function extractBookingDetails(inmate) {
   const name = inmate.title || 'Unknown';
   let charges = '';
-  const chargesMatch = inmate.content && inmate.content.match(/Charges ?:([^<]*)/i);
-  if (chargesMatch && chargesMatch[1]) {
-    charges = chargesMatch[1].replace(/<br\s*\/>/gi, '').replace(/\s+/g, ' ').trim();
+  let gender = '', race = '', age = '', location = '', bookingNumber = '';
+  if (inmate.content) {
+    // Extract charges
+    const chargesMatch = inmate.content.match(/Charges ?:([^<]*)/i);
+    if (chargesMatch && chargesMatch[1]) {
+      charges = chargesMatch[1].replace(/<br\s*\/>/gi, '').replace(/\s+/g, ' ').trim();
+    }
+    // Extract Gender
+    const genderMatch = inmate.content.match(/Gender ?: ?([^<]*)/i);
+    if (genderMatch && genderMatch[1]) gender = genderMatch[1].trim();
+    // Extract Race
+    const raceMatch = inmate.content.match(/Race ?: ?([^<]*)/i);
+    if (raceMatch && raceMatch[1]) race = raceMatch[1].trim();
+    // Extract Age
+    const ageMatch = inmate.content.match(/Age ?: ?([^<]*)/i);
+    if (ageMatch && ageMatch[1]) age = ageMatch[1].trim();
+    // Extract Location
+    const locationMatch = inmate.content.match(/Location ?: ?([^<]*)/i);
+    if (locationMatch && locationMatch[1]) location = locationMatch[1].trim();
+    // Extract Booking Number
+    const bookingNumberMatch = inmate.content.match(/Booking Number ?: ?([^<]*)/i);
+    if (bookingNumberMatch && bookingNumberMatch[1]) bookingNumber = bookingNumberMatch[1].trim();
   }
   const bookingDate = inmate.date && inmate.date.sec ? new Date(inmate.date.sec * 1000).toLocaleString() : new Date().toLocaleString();
-  const imageUrl = inmate.images && inmate.images[0] && inmate.images[0].large ? inmate.images[0].large : inmate.images[0].small;
-  return { name, charges, bookingDate, imageUrl };
+  const imageUrl = inmate.images && inmate.images[0] && inmate.images[0].large ? inmate.images[0].large : (inmate.images && inmate.images[0] && inmate.images[0].small ? inmate.images[0].small : '');
+  return { name, charges, bookingDate, imageUrl, gender, race, age, location, bookingNumber };
+}
+
+async function postUpdate(params) {
+  const res = await fetch(FEED_URL);
+  const data = await res.json();
+const textResponse = await await axios.post(`${GRAPH_API_URL}/feed`, {
+      message:`Update: PCSO has not updated the database in 24 hours.\nData: ${data.length} currently sitting in PorterCounty Jail.   \n \n \n \n ** this is an automated post from ArrestBot.js! **`,
+      access_token: ACCESS_TOKEN
+    });
+    console.log('Text Post Response:', textResponse.data);
+
+
 }
 
 
@@ -101,13 +134,13 @@ async function postImage(imageUrl, caption = '') {
   try {
 
     // // Post a text message
-    // const textResponse = await postText('Hello, this is an automated post from my Node.js bot!');
+    // const textResponse = await postText('It appears the PCSO Website only updates every X number of hours. Updates will be immediately posted. \n \n \n \n ** this is an automated post from ArrestBot.js! **');
     // console.log('Text Post Response:', textResponse);
 
     // Post an image
     const imageResponse = await postImage(
        data.imageUrl,
-      `NAME: ${data.name} - ${data.bookingDate} \n${data.charges}`
+      ` ${data.charges}\n NAME: ${data.name} - GENDER: ${data.gender} \nAGE: ${data.age} - RACE: ${data.race} - LOCATION: ${data.location} \nBOOKED: ${data.bookingDate}`
     );
     console.log('ARREST POSTED:', imageResponse);
   } catch (error) {
@@ -127,11 +160,11 @@ async function processBookings() {
   }
 }
 processBookings();
-
+// postUpdate()
 
 
 // Run every hour
 cron.schedule('0 */6 * * *', processBookings);
 
 
-console.log('Cron job scheduled: will tweet new bookings every 6th hour.');
+console.log('Cron job scheduled: will POST new bookings every 6th hour.');

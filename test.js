@@ -6,17 +6,18 @@ async function fetchJsonFromFeed() {
     const res = await fetch(FEED_URL);
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    data.push({
-    name: 'HEINTZ, DALE  GERARD JR',
-    address: 'CROWN POINT, IN',
-    gender: 'M',
-    race: 'W',
-    age: '42',
-    bookingNumber: '2404792',
-    arrestDate: '8/1/2025 08:47',
-    charges: '35-48-4-6 6 FEL    POSSESSION COCAINE O',
-    imageLink: 'https://s3.amazonaws.com/myocv/ocvapps/a19946304/MugshotsImages/2404792.jpeg'
-  },)
+    console.log(data.length, "sitting in PCJ")
+//     data.push({
+//     name: 'HEINTZ, DALE  GERARD JR',
+//     address: 'CROWN POINT, IN',
+//     gender: 'M',
+//     race: 'W',
+//     age: '42',
+//     bookingNumber: '2404792',
+//     arrestDate: '8/1/2025 08:47',
+//     charges: '35-48-4-6 6 FEL    POSSESSION COCAINE O',
+//     imageLink: 'https://s3.amazonaws.com/myocv/ocvapps/a19946304/MugshotsImages/2404792.jpeg'
+//   },)
     return data;
   } catch (err) {
     console.error('Error fetching JSON:', err);
